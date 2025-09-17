@@ -31,20 +31,16 @@ import {
   XCircle,
   AlertCircle,
   Download,
-  FileText,
   Settings,
   Clock,
-  GitBranch,
   Package,
   PlayCircle,
-  Eye,
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
 import { api } from "@/src/utils/api";
 import { useHasProjectAccess } from "@/src/features/rbac/utils/checkProjectAccess";
 import { type ProjectScope } from "@/src/features/rbac/constants/projectAccessRights";
-import { formatDistanceToNow } from "date-fns";
 
 export const CICDArtifactGenerator: React.FC = () => {
   const router = useRouter();

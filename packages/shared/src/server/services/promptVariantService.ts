@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { prisma } from "@langfuse/shared/src/db";
 import { logger } from "@langfuse/shared/src/server";
 // import { fetchLLMCompletion } from "@langfuse/shared/src/server";
 
@@ -204,22 +203,7 @@ export class PromptVariantService {
     input: GenerateVariantsInput,
   ): Promise<VariantGenerationResult[]> {
     const variants: VariantGenerationResult[] = [];
-    const { sourcePrompt, rules, temperature } = input;
-
-    const systemPrompt = `You are an expert prompt engineer. Your task is to create improved versions of the given prompt by applying the specified rules while maintaining the core intent and functionality.
-
-Rules to apply: ${rules.join(", ")}
-
-Guidelines:
-- Maintain all variable placeholders (e.g., {input}, {context})
-- Preserve the core functionality and intent
-- Apply the rules thoughtfully and naturally
-- Ensure the output is clear and actionable
-- Return only the improved prompt, no explanation`;
-
-    const userPrompt = `Original prompt: "${sourcePrompt}"
-
-Please create an improved version that incorporates the specified rules: ${rules.join(", ")}`;
+    const { sourcePrompt, rules } = input;
 
     try {
       const startTime = Date.now();
@@ -319,13 +303,6 @@ Please create an improved version that incorporates the specified rules: ${rules
 
   private applyTechnicalTone(prompt: string): string {
     // Add technical precision phrases
-    const technicalPhrases = [
-      "utilizing",
-      "implementing",
-      "analyzing",
-      "evaluating",
-      "systematically",
-    ];
     // Simple replacement of common words with technical equivalents
     return prompt
       .replace(/\buse\b/gi, "utilize")
@@ -441,7 +418,7 @@ Please create an improved version that incorporates the specified rules: ${rules
     return variables;
   }
 
-  private restoreVariables(prompt: string, variables: string[]): string {
+  private restoreVariables(prompt: string, _variables: string[]): string {
     // Simple restoration - in practice, this would be more sophisticated
     return prompt;
   }
@@ -452,7 +429,7 @@ Please create an improved version that incorporates the specified rules: ${rules
   async saveVariants(
     variants: VariantGenerationResult[],
     projectId: string,
-    sourcePromptId?: string,
+    _sourcePromptId?: string,
   ): Promise<void> {
     try {
       // In a real implementation, you would save to a PromptVariant table
@@ -479,20 +456,20 @@ Please create an improved version that incorporates the specified rules: ${rules
    * Get variants for a specific prompt
    */
   async getVariantsForPrompt(
-    promptId: string,
-    projectId: string,
+    _promptId: string,
+    _projectId: string,
   ): Promise<VariantGenerationResult[]> {
-    try {
-      // TODO: Implement database retrieval
-      // return await db.promptVariant.findMany({
-      //   where: { sourcePromptId: promptId, projectId }
-      // });
+    // TODO: Implement database retrieval
+    // try {
+    //   return await db.promptVariant.findMany({
+    //     where: { sourcePromptId: promptId, projectId }
+    //   });
+    // } catch (error) {
+    //   logger.error("Failed to retrieve variants:", error);
+    //   throw error;
+    // }
 
-      return [];
-    } catch (error) {
-      logger.error("Failed to retrieve variants:", error);
-      throw error;
-    }
+    return [];
   }
 }
 

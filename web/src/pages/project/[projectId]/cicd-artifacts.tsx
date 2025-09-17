@@ -7,12 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/src/components/ui/tabs";
 import { Package, GitBranch, Settings, Download } from "lucide-react";
 import { CICDArtifactGenerator } from "@/src/features/prompts/components/CICDArtifactGenerator";
 
@@ -28,6 +22,15 @@ export default function CICDPage() {
           description:
             "Generate deployment artifacts and integration files for your prompt engineering workflow",
         },
+        breadcrumb: [
+          {
+            name: "Prompts",
+            href: `/project/${projectId}/prompts/`,
+          },
+          {
+            name: "CI/CD Artifacts",
+          },
+        ],
       }}
     >
       <div className="space-y-6">

@@ -40,6 +40,15 @@ export default function PromptStorePage() {
           description:
             "Manage, version, and publish your prompts with labels and workflows",
         },
+        breadcrumb: [
+          {
+            name: "Prompts",
+            href: `/project/${projectId}/prompts/`,
+          },
+          {
+            name: "Store",
+          },
+        ],
       }}
     >
       <Tabs defaultValue="browse" className="w-full">

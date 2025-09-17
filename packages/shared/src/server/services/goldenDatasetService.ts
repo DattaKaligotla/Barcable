@@ -78,7 +78,7 @@ export class GoldenDatasetService {
   private readonly activeBatches = new Map<string, BatchProgress>();
   private readonly criteriaEvaluators: Record<
     EvaluationCriteria,
-    (input: any) => Promise<TestResult>
+    (_input: any) => Promise<TestResult>
   >;
 
   constructor() {
@@ -216,7 +216,8 @@ export class GoldenDatasetService {
       }
 
       // Process tests with concurrency control
-      const semaphore = new Array(input.maxConcurrency).fill(null);
+      // Create semaphore for concurrency control
+      // Note: semaphore not currently used in this implementation
       const processTask = async (task: (typeof testTasks)[0]) => {
         try {
           const result = await this.executeTest({
@@ -640,7 +641,7 @@ export class GoldenDatasetService {
 
   private async loadTestCases(
     datasetIds: string[],
-    projectId: string,
+    _projectId: string,
   ): Promise<any[]> {
     try {
       // TODO: Implement actual dataset loading
