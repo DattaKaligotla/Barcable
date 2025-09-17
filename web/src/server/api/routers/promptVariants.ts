@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import {
   createTRPCRouter,
   protectedProjectProcedure,
@@ -7,10 +7,15 @@ import { throwIfNoProjectAccess } from "@/src/features/rbac/utils/checkProjectAc
 import { TRPCError } from "@trpc/server";
 import { logger } from "@langfuse/shared/src/server";
 import {
-  promptVariantService,
-  GenerateVariantsInputSchema,
-  PromptVariantRuleSchema,
-} from "@/src/features/prompts/server/promptVariantService";
+  GenerateVariantsRequest,
+  PromptVariantRule,
+  promptVariantGenerator,
+} from "@/src/features/prompts/server/promptVariantGenerator";
+
+// Input schema for the API that includes projectId
+const GenerateVariantsInputSchema = GenerateVariantsRequest.extend({
+  projectId: z.string(),
+});
 
 export const promptVariantsRouter = createTRPCRouter({
   /**
@@ -26,7 +31,7 @@ export const promptVariantsRouter = createTRPCRouter({
           scope: "prompts:CUD",
         });
 
-        const variants = await promptVariantService.generateVariants(input);
+        const variants = await promptVariantGenerator.generateVariants(input);
 
         return {
           success: true,
@@ -57,9 +62,11 @@ export const promptVariantsRouter = createTRPCRouter({
         scope: "prompts:read",
       });
 
-      const rules = PromptVariantRuleSchema.options.map((rule) => ({
+      const rules = PromptVariantRule.options.map((rule) => ({
         value: rule,
-        label: rule.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+        label: rule
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l: string) => l.toUpperCase()),
         description: getRuleDescription(rule),
       }));
 
@@ -74,7 +81,7 @@ export const promptVariantsRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         sourcePrompt: z.string(),
-        rule: PromptVariantRuleSchema,
+        rule: PromptVariantRule,
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -85,11 +92,11 @@ export const promptVariantsRouter = createTRPCRouter({
       });
 
       try {
-        const variants = await promptVariantService.generateVariants({
-          sourcePrompt: input.sourcePrompt,
+        const variants = await promptVariantGenerator.generateVariants({
+          basePrompt: input.sourcePrompt,
           rules: [input.rule],
-          count: 1,
-          projectId: input.projectId,
+          maxVariants: 1,
+          llmAssisted: false,
         });
 
         return {
@@ -113,7 +120,7 @@ export const promptVariantsRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         promptId: z.string(),
-        rules: z.array(PromptVariantRuleSchema).min(1),
+        rules: z.array(PromptVariantRule).min(1),
         count: z.number().min(1).max(10).default(3),
       }),
     )
@@ -151,11 +158,11 @@ export const promptVariantsRouter = createTRPCRouter({
             ? prompt.prompt
             : JSON.stringify(prompt.prompt);
 
-        const variants = await promptVariantService.generateVariants({
-          sourcePrompt: promptText,
+        const variants = await promptVariantGenerator.generateVariants({
+          basePrompt: promptText,
           rules: input.rules,
-          count: input.count,
-          projectId: input.projectId,
+          maxVariants: input.count,
+          llmAssisted: false,
         });
 
         return {

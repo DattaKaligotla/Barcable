@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { logger } from "@langfuse/shared/src/server";
-// import { fetchLLMCompletion } from "@langfuse/shared/src/server";
+import { fetchLLMCompletion } from "../llm/fetchLLMCompletion";
+import { getProjectLLMApiKey } from "./llmApiKeyService";
+import { PrismaClient } from "@prisma/client";
+import {
+  ChatMessage,
+  ChatMessageRole,
+  ChatMessageType,
+  LLMAdapter,
+  ModelParams,
+} from "../llm/types";
 
 // Zod schemas for input validation
 export const PromptVariantRuleSchema = z.enum([
@@ -68,8 +77,10 @@ export class PromptVariantService {
     PromptVariantRule,
     (prompt: string) => string
   >;
+  private readonly prisma: PrismaClient;
 
-  constructor() {
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
     this.ruleImplementations = {
       // Length variations
       length_shorter: (prompt) => this.applyLengthReduction(prompt),
@@ -203,26 +214,143 @@ export class PromptVariantService {
     input: GenerateVariantsInput,
   ): Promise<VariantGenerationResult[]> {
     const variants: VariantGenerationResult[] = [];
-    const { sourcePrompt, rules } = input;
+    const { sourcePrompt, rules, projectId } = input;
 
     try {
       const startTime = Date.now();
 
-      // Note: LLM-assisted generation requires API keys to be configured
-      // For demo purposes, we'll generate a mock LLM response
-      const mockLLMResponse = this.generateMockLLMVariant(sourcePrompt, rules);
+      // Get LLM API key for the project
+      const apiKeyInfo = await getProjectLLMApiKey(
+        this.prisma,
+        projectId!,
+        "openai",
+      );
 
-      if (mockLLMResponse) {
-        variants.push({
-          id: `llm_variant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      if (!apiKeyInfo) {
+        logger.warn(
+          `No LLM API key available for project ${projectId}. Falling back to mock generation.`,
+        );
+        const mockResponse = this.generateMockLLMVariant(sourcePrompt, rules);
+        if (mockResponse) {
+          variants.push({
+            id: `mock_variant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            sourcePrompt,
+            generatedPrompt: mockResponse.trim(),
+            appliedRules: rules,
+            llmAssisted: false, // Mark as not LLM-assisted since it's mock
+            metadata: {
+              generationTime: Date.now() - startTime,
+              tokensUsed: 50,
+              confidence: 0.6, // Lower confidence for mock variants
+              ruleApplications: Object.fromEntries(
+                rules.map((rule) => [rule, true]),
+              ),
+            },
+            createdAt: new Date(),
+          });
+        }
+        return variants;
+      }
+
+      // Create a prompt for the LLM to generate variants
+      const llmPrompt = this.createVariantGenerationPrompt(sourcePrompt, rules);
+
+      const messages: ChatMessage[] = [
+        {
+          type: ChatMessageType.User,
+          role: ChatMessageRole.User,
+          content: llmPrompt,
+        },
+      ];
+
+      const modelParams: ModelParams = {
+        provider: apiKeyInfo.provider,
+        adapter: apiKeyInfo.adapter,
+        model: this.getDefaultModelForProvider(apiKeyInfo.provider),
+        temperature: 0.7,
+        max_tokens: 1000,
+      };
+
+      // Make the LLM API call
+      const { completion, processTracedEvents } = await fetchLLMCompletion({
+        messages,
+        modelParams,
+        streaming: false,
+        apiKey: apiKeyInfo.secretKey,
+        baseURL: apiKeyInfo.baseURL || undefined,
+        extraHeaders: apiKeyInfo.extraHeaders,
+        throwOnError: false,
+      });
+
+      // Process traced events for token counting
+      await processTracedEvents();
+
+      if (typeof completion === "string" && completion.trim()) {
+        // Parse the LLM response
+        const parsedVariants = this.parseLLMVariantResponse(
+          completion,
           sourcePrompt,
-          generatedPrompt: mockLLMResponse.trim(),
+          rules,
+        );
+
+        for (const variant of parsedVariants) {
+          variants.push({
+            id: `llm_variant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            sourcePrompt,
+            generatedPrompt: variant.trim(),
+            appliedRules: rules,
+            llmAssisted: true,
+            metadata: {
+              generationTime: Date.now() - startTime,
+              tokensUsed: this.estimateTokenCount(llmPrompt + completion), // Rough estimate
+              confidence: 0.9, // High confidence for LLM-generated variants
+              ruleApplications: Object.fromEntries(
+                rules.map((rule) => [rule, true]),
+              ),
+            },
+            createdAt: new Date(),
+          });
+        }
+      } else {
+        logger.warn(
+          "LLM returned empty or invalid response, falling back to mock generation",
+        );
+        const mockResponse = this.generateMockLLMVariant(sourcePrompt, rules);
+        if (mockResponse) {
+          variants.push({
+            id: `fallback_variant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            sourcePrompt,
+            generatedPrompt: mockResponse.trim(),
+            appliedRules: rules,
+            llmAssisted: false,
+            metadata: {
+              generationTime: Date.now() - startTime,
+              tokensUsed: 50,
+              confidence: 0.6,
+              ruleApplications: Object.fromEntries(
+                rules.map((rule) => [rule, true]),
+              ),
+            },
+            createdAt: new Date(),
+          });
+        }
+      }
+    } catch (error) {
+      logger.error("LLM-assisted variant generation failed:", error);
+
+      // Fallback to mock generation on error
+      const mockResponse = this.generateMockLLMVariant(sourcePrompt, rules);
+      if (mockResponse) {
+        variants.push({
+          id: `error_fallback_variant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          sourcePrompt,
+          generatedPrompt: mockResponse.trim(),
           appliedRules: rules,
-          llmAssisted: true,
+          llmAssisted: false,
           metadata: {
-            generationTime: Date.now() - startTime,
-            tokensUsed: 50, // Mock token usage
-            confidence: 0.8, // Default confidence for mock LLM variants
+            generationTime: 0,
+            tokensUsed: 50,
+            confidence: 0.5,
             ruleApplications: Object.fromEntries(
               rules.map((rule) => [rule, true]),
             ),
@@ -230,8 +358,6 @@ export class PromptVariantService {
           createdAt: new Date(),
         });
       }
-    } catch (error) {
-      logger.error("LLM-assisted variant generation failed:", error);
     }
 
     return variants;
@@ -262,6 +388,128 @@ export class PromptVariantService {
     }
 
     return variant;
+  }
+
+  /**
+   * Create a prompt for the LLM to generate variants
+   */
+  private createVariantGenerationPrompt(
+    sourcePrompt: string,
+    rules: PromptVariantRule[],
+  ): string {
+    const ruleDescriptions = rules
+      .map((rule) => {
+        switch (rule) {
+          case "length_shorter":
+            return "make it more concise and brief";
+          case "length_longer":
+            return "add more detail and explanation";
+          case "tone_formal":
+            return "use formal, professional language";
+          case "tone_casual":
+            return "use casual, conversational language";
+          case "tone_technical":
+            return "use technical, precise terminology";
+          case "structure_step_by_step":
+            return "structure it as clear steps";
+          case "structure_bullet_points":
+            return "format as bullet points";
+          case "structure_numbered":
+            return "format as numbered list";
+          case "context_minimal":
+            return "reduce context and background";
+          case "context_detailed":
+            return "add more context and background";
+          case "format_question":
+            return "format as a question";
+          case "format_statement":
+            return "format as a statement";
+          case "format_command":
+            return "format as a command or instruction";
+          case "specificity_specific":
+            return "make it more specific and precise";
+          case "specificity_general":
+            return "make it more general and broad";
+          case "complexity_simple":
+            return "simplify the language and concepts";
+          case "complexity_complex":
+            return "add complexity and nuance";
+          case "include_examples":
+            return "include relevant examples";
+          case "exclude_examples":
+            return "remove any examples";
+          case "temperature_creative":
+            return "encourage creative, diverse responses";
+          case "temperature_conservative":
+            return "encourage focused, consistent responses";
+          default:
+            return `apply the ${rule} transformation`;
+        }
+      })
+      .join(", ");
+
+    return `You are a prompt engineering expert. I need you to create an improved version of the following prompt by applying these specific transformations: ${ruleDescriptions}.
+
+Original prompt:
+"${sourcePrompt}"
+
+Please provide only the improved prompt without any explanation or additional commentary. The improved prompt should maintain the core intent while incorporating the requested changes.
+
+Improved prompt:`;
+  }
+
+  /**
+   * Get the default model for a given provider
+   */
+  private getDefaultModelForProvider(provider: string): string {
+    switch (provider.toLowerCase()) {
+      case "openai":
+        return "gpt-4";
+      case "anthropic":
+        return "claude-3-sonnet-20240229";
+      case "azure":
+        return "gpt-4";
+      default:
+        return "gpt-4";
+    }
+  }
+
+  /**
+   * Parse the LLM response to extract variants
+   */
+  private parseLLMVariantResponse(
+    response: string,
+    sourcePrompt: string,
+    rules: PromptVariantRule[],
+  ): string[] {
+    // Clean up the response
+    let cleanResponse = response.trim();
+
+    // Remove common prefixes that LLMs might add
+    cleanResponse = cleanResponse
+      .replace(
+        /^(Improved prompt:|Here's the improved prompt:|The improved prompt is:)/i,
+        "",
+      )
+      .replace(/^["'`]/g, "")
+      .replace(/["'`]$/g, "")
+      .trim();
+
+    // If the response is empty or too similar to original, fallback
+    if (!cleanResponse || cleanResponse === sourcePrompt) {
+      return [this.generateMockLLMVariant(sourcePrompt, rules)];
+    }
+
+    // For now, return single variant, but this could be extended to parse multiple variants
+    return [cleanResponse];
+  }
+
+  /**
+   * Estimate token count (rough approximation)
+   */
+  private estimateTokenCount(text: string): number {
+    // Rough approximation: 1 token ≈ 4 characters for English text
+    return Math.ceil(text.length / 4);
   }
 
   // Rule implementation methods
@@ -474,4 +722,5 @@ export class PromptVariantService {
 }
 
 // Export singleton instance
-export const promptVariantService = new PromptVariantService();
+// Note: Export will need to be updated to pass prisma instance
+// export const promptVariantService = new PromptVariantService(prisma);

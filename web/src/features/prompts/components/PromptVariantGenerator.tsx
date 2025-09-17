@@ -23,49 +23,34 @@ const VARIANT_RULES: {
   description: string;
 }[] = [
   {
-    value: "strict",
-    label: "Strict",
-    description: "Add explicit instructions to follow requirements exactly",
-  },
-  {
-    value: "bullet_points",
-    label: "Bullet Points",
-    description: "Format response as bullet points",
-  },
-  {
-    value: "numbered_list",
-    label: "Numbered List",
-    description: "Format response as numbered list",
-  },
-  {
-    value: "concise",
-    label: "Concise",
-    description: "Make response brief and to the point",
-  },
-  {
-    value: "detailed",
-    label: "Detailed",
-    description: "Request comprehensive, thorough response",
-  },
-  {
-    value: "formal",
-    label: "Formal",
+    value: "tone_formal",
+    label: "Formal Tone",
     description: "Use professional, formal language",
   },
   {
-    value: "casual",
-    label: "Casual",
+    value: "tone_casual",
+    label: "Casual Tone",
     description: "Use conversational, casual language",
   },
   {
-    value: "step_by_step",
+    value: "structure_step_by_step",
     label: "Step by Step",
     description: "Break down into clear steps",
   },
   {
-    value: "json_format",
-    label: "JSON Format",
-    description: "Request JSON-only response",
+    value: "include_examples",
+    label: "Include Examples",
+    description: "Request examples in the response",
+  },
+  {
+    value: "length_shorter",
+    label: "Shorter",
+    description: "Make response brief and to the point",
+  },
+  {
+    value: "length_longer",
+    label: "Longer",
+    description: "Request comprehensive, thorough response",
   },
 ];
 

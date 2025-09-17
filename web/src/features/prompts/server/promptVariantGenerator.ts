@@ -2,15 +2,12 @@ import { z } from "zod/v4";
 
 // Rule-based prompt transformation types
 export const PromptVariantRule = z.enum([
-  "strict",
-  "bullet_points",
-  "numbered_list",
-  "concise",
-  "detailed",
-  "formal",
-  "casual",
-  "step_by_step",
-  "json_format",
+  "tone_formal",
+  "tone_casual",
+  "structure_step_by_step",
+  "include_examples",
+  "length_shorter",
+  "length_longer",
 ]);
 
 export type PromptVariantRule = z.infer<typeof PromptVariantRule>;
@@ -49,32 +46,23 @@ const RULE_TRANSFORMATIONS: Record<
   PromptVariantRule,
   (prompt: string) => string
 > = {
-  strict: (prompt) =>
-    `${prompt}\n\nIMPORTANT: Follow these instructions exactly. Do not deviate from the specified format or requirements.`,
-
-  bullet_points: (prompt) =>
-    `${prompt}\n\nFormat your response as bullet points:\n• Point 1\n• Point 2\n• Point 3`,
-
-  numbered_list: (prompt) =>
-    `${prompt}\n\nFormat your response as a numbered list:\n1. First item\n2. Second item\n3. Third item`,
-
-  concise: (prompt) =>
-    `${prompt}\n\nProvide a concise response. Keep it brief and to the point.`,
-
-  detailed: (prompt) =>
-    `${prompt}\n\nProvide a detailed, comprehensive response with thorough explanations.`,
-
-  formal: (prompt) =>
+  tone_formal: (prompt: string) =>
     `${prompt}\n\nUse formal, professional language in your response.`,
 
-  casual: (prompt) =>
+  tone_casual: (prompt: string) =>
     `${prompt}\n\nUse casual, conversational language in your response.`,
 
-  step_by_step: (prompt) =>
+  structure_step_by_step: (prompt: string) =>
     `${prompt}\n\nBreak down your response into clear, step-by-step instructions.`,
 
-  json_format: (prompt) =>
-    `${prompt}\n\nRespond in valid JSON format only. Do not include any text outside the JSON structure.`,
+  include_examples: (prompt: string) =>
+    `${prompt}\n\nPlease include relevant examples to illustrate your points.`,
+
+  length_shorter: (prompt: string) =>
+    `${prompt}\n\nProvide a concise response. Keep it brief and to the point.`,
+
+  length_longer: (prompt: string) =>
+    `${prompt}\n\nProvide a detailed, comprehensive response with thorough explanations.`,
 };
 
 export class PromptVariantGenerator {
