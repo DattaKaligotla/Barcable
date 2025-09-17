@@ -12,6 +12,7 @@ import { cloudBillingRouter } from "@/src/ee/features/billing/server/cloudBillin
 import { observationsRouter } from "@/src/server/api/routers/observations";
 import { sessionRouter } from "@/src/server/api/routers/sessions";
 import { promptRouter } from "@/src/features/prompts/server/routers/promptRouter";
+import { promptVariantsRouter } from "@/src/features/prompts/server/routers/promptVariantsRouter";
 import { modelRouter } from "@/src/server/api/routers/models";
 import { evalRouter } from "@/src/features/evals/server/router";
 import { posthogIntegrationRouter } from "@/src/features/posthog-integration/posthog-integration-router";
@@ -44,6 +45,10 @@ import { slackRouter } from "@/src/features/slack/server/router";
 import { plainRouter } from "@/src/features/support-chat/trpc/plainRouter";
 import { queueAssignmentRouter } from "@/src/features/annotation-queues/server/annotationQueueAssignments";
 import { surveysRouter } from "@/src/server/api/routers/surveys";
+import { datasetEvaluationRouter } from "@/src/server/api/routers/datasetEvaluation";
+import { promptScoringRouter } from "@/src/server/api/routers/promptScoring";
+import { promptStoreRouter } from "@/src/server/api/routers/promptStore";
+import { cicdArtifactRouter } from "@/src/server/api/routers/cicdArtifacts";
 
 /**
  * This is the primary router for your server.
@@ -68,9 +73,14 @@ export const appRouter = createTRPCRouter({
   projectApiKeys: projectApiKeysRouter,
   members: membersRouter,
   datasets: datasetRouter,
+  datasetEvaluation: datasetEvaluationRouter,
   cloudBilling: cloudBillingRouter,
   observations: observationsRouter,
   prompts: promptRouter,
+  promptVariants: promptVariantsRouter,
+  promptScoring: promptScoringRouter,
+  promptStore: promptStoreRouter,
+  cicdArtifacts: cicdArtifactRouter,
   models: modelRouter,
   evals: evalRouter,
   defaultLlmModel: defaultEvalModelRouter,

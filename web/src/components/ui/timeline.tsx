@@ -60,3 +60,68 @@ export function TimelineItem({
     </div>
   );
 }
+
+interface TimelineIconProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function TimelineIcon({ children, className }: TimelineIconProps) {
+  return (
+    <div
+      className={cn(
+        "absolute -left-[15px] top-2 flex h-6 w-6 items-center justify-center rounded-full border border-muted-foreground bg-background",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+interface TimelineContentProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function TimelineContent({ children, className }: TimelineContentProps) {
+  return (
+    <div className={cn("ml-6 flex-1 space-y-1", className)}>{children}</div>
+  );
+}
+
+interface TimelineHeaderProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function TimelineHeader({ children, className }: TimelineHeaderProps) {
+  return <div className={cn("space-y-1", className)}>{children}</div>;
+}
+
+interface TimelineTitleProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function TimelineTitle({ children, className }: TimelineTitleProps) {
+  return (
+    <h4 className={cn("text-sm font-medium leading-none", className)}>
+      {children}
+    </h4>
+  );
+}
+
+interface TimelineDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function TimelineDescription({
+  children,
+  className,
+}: TimelineDescriptionProps) {
+  return (
+    <p className={cn("text-sm text-muted-foreground", className)}>{children}</p>
+  );
+}

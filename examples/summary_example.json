@@ -1,0 +1,102 @@
+{
+  "workflow": {
+    "name": "Barcable Prompt Engineering",
+    "version": "1.0",
+    "generated_at": "2025-09-16T10:30:00.000Z"
+  },
+  "project": {
+    "id": "example-project-id",
+    "name": "Customer Service AI"
+  },
+  "timeframe": {
+    "start": "2025-09-15T10:30:00.000Z",
+    "end": "2025-09-16T10:30:00.000Z",
+    "duration_hours": 24.0
+  },
+  "metrics": {
+    "prompts": {
+      "total": 25,
+      "active": 23,
+      "in_production": 8,
+      "in_staging": 6,
+      "candidates": 9
+    },
+    "changes": {
+      "total": 5,
+      "created": 1,
+      "updated": 2,
+      "promoted": 1,
+      "labeled": 2
+    },
+    "performance": {
+      "avg_evaluation_score": 87.3,
+      "top_performing_prompts": [
+        "customer-support-v2",
+        "onboarding-flow",
+        "billing-assistant",
+        "technical-support",
+        "sales-qualifier"
+      ],
+      "improvement_rate": 15.2
+    }
+  },
+  "deployment": {
+    "production_candidates": [
+      {
+        "name": "customer-support-v2",
+        "version": 3,
+        "score": 92.1,
+        "ready": true
+      },
+      {
+        "name": "onboarding-flow",
+        "version": 2,
+        "score": 89.7,
+        "ready": true
+      },
+      {
+        "name": "experimental-chat",
+        "version": 4,
+        "score": 81.3,
+        "ready": false
+      }
+    ],
+    "staging_updates": [
+      {
+        "name": "new-feature-prompt",
+        "version": 1,
+        "changes": ["Initial implementation", "Added safety checks"]
+      },
+      {
+        "name": "experimental-chat",
+        "version": 4,
+        "changes": ["Improved response quality", "Updated configuration"]
+      }
+    ],
+    "review_required": [
+      {
+        "name": "new-feature-prompt",
+        "reason": "New candidate prompt requires review before production",
+        "urgency": "medium"
+      },
+      {
+        "name": "experimental-chat",
+        "reason": "Significant changes to chat behavior need validation",
+        "urgency": "high"
+      }
+    ]
+  },
+  "quality": {
+    "test_coverage": 89.5,
+    "evaluation_status": {
+      "passed": 20,
+      "failed": 2,
+      "pending": 1
+    },
+    "compliance": {
+      "label_standards": true,
+      "review_process": true,
+      "audit_trail": true
+    }
+  }
+}

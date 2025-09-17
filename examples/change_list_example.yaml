@@ -1,0 +1,105 @@
+# Barcable CI/CD Change List
+# Generated at: 2025-09-16T10:30:00.000Z
+# Project: example-project-id
+
+version: "1.0"
+generated_at: "2025-09-16T10:30:00.000Z"
+project_id: "example-project-id"
+
+timeframe:
+  start: "2025-09-15T10:30:00.000Z"
+  end: "2025-09-16T10:30:00.000Z"
+
+summary:
+  total_changes: 5
+  prompts_affected: 3
+  new_prompts: 1
+  updated_prompts: 2
+  deleted_prompts: 0
+  label_changes: 3
+
+deployment_info:
+  production_ready: ["customer-support-v2", "onboarding-flow"]
+  staging_ready: ["experimental-chat", "customer-support-v2"]
+  requires_review: ["new-feature-prompt", "experimental-chat"]
+
+changes:
+  - type: "created"
+    timestamp: "2025-09-16T09:15:00.000Z"
+    prompt:
+      name: "new-feature-prompt"
+      version: 1
+      id: "prompt_abc123"
+    changes:
+      labels:
+        current: ["candidate/feature-x", "staging"]
+      metadata:
+        tags: ["feature", "experimental"]
+        commitMessage: "Add new feature prompt for user onboarding"
+    author:
+      id: "user_123"
+
+  - type: "labeled"
+    timestamp: "2025-09-16T08:45:00.000Z"
+    prompt:
+      name: "customer-support-v2"
+      version: 3
+      id: "prompt_def456"
+    changes:
+      labels:
+        added: ["production"]
+        removed: ["staging"]
+        current: ["production", "latest"]
+      metadata:
+        commitMessage: "Promote customer support prompt to production"
+    author:
+      id: "user_456"
+
+  - type: "promoted"
+    timestamp: "2025-09-16T07:30:00.000Z"
+    prompt:
+      name: "onboarding-flow"
+      version: 2
+      id: "prompt_ghi789"
+    changes:
+      labels:
+        added: ["production"]
+        removed: ["candidate/onboarding-v2"]
+        current: ["production", "latest"]
+      metadata:
+        commitMessage: "Promote onboarding flow after successful A/B testing"
+    author:
+      id: "user_789"
+
+  - type: "updated"
+    timestamp: "2025-09-15T16:20:00.000Z"
+    prompt:
+      name: "experimental-chat"
+      version: 4
+      id: "prompt_jkl012"
+    changes:
+      labels:
+        current: ["candidate/chat-improvements", "staging"]
+      content:
+        prompt: true
+        config: true
+      metadata:
+        commitMessage: "Improve chat response quality and add safety checks"
+    author:
+      id: "user_321"
+
+  - type: "labeled"
+    timestamp: "2025-09-15T14:10:00.000Z"
+    prompt:
+      name: "legacy-support"
+      version: 1
+      id: "prompt_mno345"
+    changes:
+      labels:
+        added: ["deprecated"]
+        removed: ["production"]
+        current: ["deprecated"]
+      metadata:
+        commitMessage: "Deprecate legacy support prompt in favor of v2"
+    author:
+      id: "user_654"
