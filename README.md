@@ -96,7 +96,7 @@ Langfuse is an **open source LLM engineering** platform. It helps teams collabor
 
 ### Langfuse Cloud
 
-Managed deployment by the Langfuse team, generous free-tier, no credit card required.
+Managed deployment by the Langfuse team, generous free-tier, no credit card required. Woo
 
 <div align="center">
     <a href="https://cloud.langfuse.com" target="_blank">
